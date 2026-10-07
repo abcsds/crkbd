@@ -45,8 +45,16 @@ def _row(r):
     return [(r, c) for c in range(6)] + [(r, c) for c in range(7, 12)] + [(3, 9 + r)]
 
 MATRIX_ORDER = _row(0) + _row(1) + _row(2) + [(3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8)]
-EXTRA_KEYS = [(3, 0), (3, 1), (0, 6), (1, 6)]   # in the definition, not populated here
+EXTRA_KEYS = [(3, 0), (3, 1), (0, 6), (1, 6)]   # inner keys: left (3,0) top (3,1) bottom; right (0,6) top (1,6) bottom
 ABSENT = [(2, 6), (3, 2)]                        # not in the definition at all
+
+# Inner keys on Base (beto, Vial 2026-10-07): F12 / LCtrl inside the left half,
+# PrtSc / RCtrl inside the right half. Transparent on every other layer.
+EXTRA_BASE = {(3, 0): "KC_F12", (3, 1): "KC_LCTRL", (0, 6): "KC_PSCREEN", (1, 6): "KC_RCTRL"}
+
+# QMK settings (Vial QSIDs): 7 = Tapping Term (ms); 8 = Tap-Hold flags, bit 0 set
+# as saved from the GUI with Permissive Hold enabled.
+SETTINGS = {"7": 200, "8": 1}
 
 L_BASE, L_LOWER, L_RAISE, L_ADJUST, L_MAGIC1, L_MAGIC2, L_MOUSE = range(7)
 
@@ -198,31 +206,93 @@ KEY_OVERRIDES = [
 # ---------------------------------------------------------------------------
 # Generators
 # ---------------------------------------------------------------------------
+# Vial's own spelling of the keycodes we use, so a layout saved from the GUI
+# diffs cleanly against the generated file (`python3 layout.py --diff FILE`).
+CANON = {
+    "KC_SCLN": "KC_SCOLON", "KC_LSFT": "KC_LSHIFT", "KC_RSFT": "KC_RSHIFT", "KC_COMM": "KC_COMMA",
+    "KC_SLSH": "KC_SLASH", "KC_SPC": "KC_SPACE", "KC_ENT": "KC_ENTER", "KC_BSPC": "KC_BSPACE",
+    "KC_QUOT": "KC_QUOTE", "KC_GRV": "KC_GRAVE", "KC_PGDN": "KC_PGDOWN", "KC_DEL": "KC_DELETE",
+    "KC_ESC": "KC_ESCAPE", "KC_LBRC": "KC_LBRACKET", "KC_RBRC": "KC_RBRACKET", "KC_MINS": "KC_MINUS",
+    "KC_EQL": "KC_EQUAL", "KC_RGHT": "KC_RIGHT", "KC_BSLS": "KC_BSLASH", "KC_INS": "KC_INSERT",
+    "KC_EXLM": "LSFT(KC_1)", "KC_AT": "LSFT(KC_2)", "KC_HASH": "LSFT(KC_3)", "KC_DLR": "LSFT(KC_4)",
+    "KC_PERC": "LSFT(KC_5)", "KC_CIRC": "LSFT(KC_6)", "KC_AMPR": "LSFT(KC_7)", "KC_ASTR": "LSFT(KC_8)",
+    "KC_LPRN": "LSFT(KC_9)", "KC_RPRN": "LSFT(KC_0)",
+}
+
+def canon(kc):
+    if isinstance(kc, int):
+        return kc if kc == -1 else "0x%04X" % kc
+    if kc in CANON:
+        return CANON[kc]
+    if "(" in kc and kc.endswith(")"):
+        outer, inner = kc[:-1].split("(", 1)
+        return "%s(%s)" % (outer, canon(inner))
+    return kc
+
+EMPTY_TD = ["KC_NO", "KC_NO", "KC_NO", "KC_NO", 200]
+EMPTY_COMBO = ["KC_NO"] * 5
+EMPTY_KO = {"trigger": "KC_NO", "replacement": "KC_NO", "layers": 65535, "trigger_mods": 0,
+            "negative_mod_mask": 0, "suppressed_mods": 0, "options": 7}
+SLOTS = 32
+
 def build_vil():
     layout = []
-    for layer in LAYERS + [[T] * 42] * (LAYER_COUNT - len(LAYERS)):
+    for li, layer in enumerate(LAYERS + [[T] * 42] * (LAYER_COUNT - len(LAYERS))):
         assert len(layer) == 42, len(layer)
         grid = [[-1] * COLS for _ in range(ROWS)]
         for (r, c), kc in zip(MATRIX_ORDER, layer):
-            grid[r][c] = kc
-        for r, c in EXTRA_KEYS:
-            grid[r][c] = X
+            grid[r][c] = canon(kc)
+        for rc in EXTRA_KEYS:
+            grid[rc[0]][rc[1]] = EXTRA_BASE[rc] if li == L_BASE else T
         layout.append(grid)
+    overrides = [dict(ko, trigger=canon(ko["trigger"]), replacement=canon(ko["replacement"]))
+                 for ko in KEY_OVERRIDES]
     return {
         "version": 1,
         "uid": UID,
         "layout": layout,
-        "encoder_layout": [],
-        "layout_options": 0,
+        "encoder_layout": [[] for _ in range(LAYER_COUNT)],
+        "layout_options": -1,
         "macro": [macro_actions(g) for g in MACROS],
         "vial_protocol": VIAL_PROTOCOL,
         "via_protocol": VIA_PROTOCOL,
-        "tap_dance": [],
-        "combo": [],
-        "key_override": KEY_OVERRIDES,
+        "tap_dance": [list(EMPTY_TD) for _ in range(SLOTS)],
+        "combo": [list(EMPTY_COMBO) for _ in range(SLOTS)],
+        "key_override": overrides + [dict(EMPTY_KO) for _ in range(SLOTS - len(overrides))],
         "alt_repeat_key": [],
-        "settings": {},
+        "settings": dict(SETTINGS),
     }
+
+POS_NAMES = ("GEsc ' , . p y f g c r l Bspc Tab a o e u i d h t n s - LSft ; q j k x b m w v z RSft "
+             "L1 L2 L3 R1 R2 R3").split()
+POS = {rc: n for rc, n in zip(MATRIX_ORDER, POS_NAMES)}
+POS.update({(3, 0): "Lin1", (3, 1): "Lin2", (0, 6): "Rin1", (1, 6): "Rin2"})
+
+def diff_vil(path):
+    """Print what a layout saved from Vial changes relative to the tables here."""
+    gen, saved = build_vil(), json.load(open(path))
+    n = 0
+    for li in range(LAYER_COUNT):
+        for r in range(ROWS):
+            for c in range(COLS):
+                a = gen["layout"][li][r][c]
+                b = saved["layout"][li][r][c] if li < len(saved["layout"]) else None
+                if a != b:
+                    n += 1
+                    print("%-7s %-5s (%d,%d): %s -> %s" % (LAYER_NAMES[li] if li < len(LAYER_NAMES) else "L%d" % li,
+                                                          POS.get((r, c), "?"), r, c, a, b))
+    for k in ("macro", "tap_dance", "combo", "key_override", "alt_repeat_key", "encoder_layout"):
+        for i, (a, b) in enumerate(zip(gen[k], saved.get(k, []))):
+            if a != b:
+                n += 1; print("%s #%d: %s -> %s" % (k, i, a, b))
+        if len(saved.get(k, [])) != len(gen[k]):
+            n += 1; print("%s: count %d -> %d" % (k, len(gen[k]), len(saved.get(k, []))))
+    for q in sorted(set(gen["settings"]) | set(saved.get("settings", {})), key=int):
+        a, b = gen["settings"].get(q), saved.get("settings", {}).get(q)
+        if a is not None and a != b:
+            n += 1; print("setting qsid %s: %s -> %s" % (q, a, b))
+    print("differences:", n)
+    return n
 
 def keysym(ch):
     return "U%04X" % ord(ch)
@@ -265,6 +335,8 @@ def compose_missing():
     return out
 
 def main():
+    if len(sys.argv) > 2 and sys.argv[1] == "--diff":
+        sys.exit(1 if diff_vil(sys.argv[2]) else 0)
     vil = build_vil()
     (HERE / "w-corne-wanderers.vil").write_text(json.dumps(vil, ensure_ascii=False, indent=1) + "\n")
     (HERE / "xkb" / "symbols").mkdir(parents=True, exist_ok=True)
