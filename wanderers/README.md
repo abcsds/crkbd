@@ -206,7 +206,7 @@ LSft  ___  ___  ___  ___  ___     ___  M←   M↑   M↓   M→   ___
 | Dynamic layers | 8 (7 used) |
 | Macros | 16 slots, 6377-byte buffer (16 used) |
 | Tap dance / combo / key override slots | 32 / 32 / 32 (10 overrides used) |
-| Matrix | 4×12; rows 0–2 alphas, row 3 cols 3–8 thumbs; cols 0,1,9,10,11 of row 3 are optional keys not on this board |
+| Matrix | 4×12. Left half rows 0–2 cols 0–5; right half rows 0–2 cols 7–11 plus the outer pinky column on (3,9) (3,10) (3,11); thumbs (3,3)–(3,8). (3,0) (3,1) (0,6) (1,6) are optional inner keys this board lacks; (2,6) and (3,2) do not exist. |
 
 **Dongle jam.** The dongle relays Vial requests over the radio. If any request
 times out (halves asleep, two clients at once, write to a stale node) the
