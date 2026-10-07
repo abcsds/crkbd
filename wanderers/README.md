@@ -227,10 +227,28 @@ Vial if a probe ran.
 
 ## Loading and testing
 
-1. Replug the dongle (clears any jam). Open Vial (`vial`, or `nix run nixpkgs#vial`).
-2. File → Load saved layout → `w-corne-wanderers.vil`. Vial writes keys, macros and key overrides.
-3. QMK Settings tab: Tapping Term ~200 ms, Permissive Hold on (thumb mod-taps).
-4. Host side: the xkb option must be active in the session (`wanderers:magic`), see below.
+Everything runs from this directory through its flake (`flake.nix`):
+
+```
+cd ~/code/crkbd/wanderers
+nix run .#vial            # Vial GUI (also: nix run nixpkgs#vial)
+nix run .#probe           # dump the board's budget + definition (replug the dongle first)
+nix develop               # shell with python3, Vial and xkbcli
+python3 layout.py         # regenerate .vil + xkb files after editing the tables
+```
+
+Vial needs the hidraw udev rule (see Host prerequisites); without it the GUI
+shows no keyboard.
+
+1. Replug the dongle, so a previous timeout cannot leave it jammed.
+2. `nix run .#vial`. The window shows the W-CORNE layout once the handshake
+   succeeds.
+3. File → Load saved layout → `w-corne-wanderers.vil`. Vial writes keys,
+   macros and key overrides to the board.
+4. QMK Settings tab: Tapping Term 200 ms, Permissive Hold on.
+5. Host side: the xkb option `wanderers:magic` must be active in the session
+   (Host prerequisites). Test: Raise + left outer thumb, then `a` → α;
+   with Shift → Α. Function keys or nothing means the option is not active.
 
 ## Host prerequisites
 
