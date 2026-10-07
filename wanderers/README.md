@@ -114,31 +114,64 @@ brightness usages, carried by the dongle's consumer-control interface.
 
 ### Magic1 (one glyph: Raise + L1; stretch: Adjust + TG(Mag1))
 
-Greek on its Latin letter as on the Luma40. Zero-frequency Greek
-(ο υ ι ξ ς ζ ω ψ) gave their keys to the top math symbols from
-`docs/luma40-designer/freq-study/symbols.md`, several at their old Magic-Hi
-positions (≤ on o, ± on i). Thumbs transparent so Space/Enter/mods keep
+The board has only **16 macro slots**, so most glyphs are not macros. The 20
+keys marked with a letter below send a spare scancode (F14–F24, the JIS and
+Korean keys, non-US backslash, keypad =) that the host's xkb option
+`wanderers:magic` maps to four levels: plain, Shift, AltGr, AltGr+Shift.
+Greek therefore keeps its lower/upper Shift pair as on the Luma40. Keys
+marked `*` are Compose macros. Thumbs transparent so Space/Enter/mods keep
 working in toggle mode. `Exit` = `TG(4)`.
 
 ```
-Exit  …  “  ”  π  θ      φ  γ  χ  ρ  λ  ·
-→     α  ≤  ε  ≥  ±      Δ  η  τ  ν  σ  –
-∞     ¿  ¡  °  κ  ×      β  μ  ≈  √  ∈  ↔
-          ___ ___ ___        ___ ___ ___
+Exit   …*   “«   ”»   πΠ   θΘ      φΦ   γΓ   χΧ   ρΡ   λΛ   ·*
+→*     αΑ   ≤*   εΕ   ≥*   ±*      δΔ   ηΗ   τΤ   νΝ   σΣ   –—
+∞*     ¿¡   •*   °*   κ*   ×*      βΒ   μΜ   ≈*   √*   ∈*   ∅*
 ```
 
 ### Magic2 (one glyph: Raise + L3; stretch: Adjust + TG(Mag2))
 
-Next tier from the study plus the Luma40 Magic-Hi logic/set symbols.
-Mnemonics: ∀ a, ∃ e, ∪ u, ∂ d, ⊤ t, ⊥ b, ∇ n, Σ s, ∧ w (wedge), ∨ v (vee),
-𝔼 m (mean). `Exit` = `TG(5)`.
+The AltGr levels of the same 20 keys, sent as `RALT(scancode)`. Second
+glyph with Shift. Also reachable without this layer as Magic1 + AltGr.
+Macro positions are `KC_NO` here. `Exit` = `TG(5)`.
 
 ```
-Exit  ∑  ∫  ⋯  Π  Θ      Φ  Γ  ∠  ℝ  Λ  •
-⇒     ∀  Ω  ∃  ∪  ∩      ∂  ∼  ⊤  ∇  Σ  ≠
-←     δ  ∅  Ψ  ⊂  ∉      ⊥  𝔼  ∧  ∨  ∝  ÷
-          ___ ___ ___        ___ ___ ___
+Exit   .    ⟨⟦   ⟩⟧   ∝‰   ∼≅      ∫∮   ⊤⊥   ⊂⊃   ℝℤ   ←↔   .
+.      ∀∧   .    ∃∨   .    .       ∂∇   ⋯⋮   ⇒⇔   ℕℚ   ∑∏   ÷∓
+.      ≠≡   .    .    .    .       ∪∩   𝔼ℙ   .    .    .    .
 ```
+
+Host mapping (`xkb/symbols/wanderers`, generated):
+
+| Pos | Scancode | xkb | L1 | L2 | L3 | L4 |
+|---|---|---|---|---|---|---|
+| p | KC_F14 | FK14 | π | Π | ∝ | ‰ |
+| y | KC_F15 | FK15 | θ | Θ | ∼ | ≅ |
+| f | KC_F16 | FK16 | φ | Φ | ∫ | ∮ |
+| g | KC_F17 | FK17 | γ | Γ | ⊤ | ⊥ |
+| c | KC_F18 | FK18 | χ | Χ | ⊂ | ⊃ |
+| r | KC_F19 | FK19 | ρ | Ρ | ℝ | ℤ |
+| l | KC_F20 | FK20 | λ | Λ | ← | ↔ |
+| a | KC_F21 | FK21 | α | Α | ∀ | ∧ |
+| e | KC_F22 | FK22 | ε | Ε | ∃ | ∨ |
+| d | KC_F23 | FK23 | δ | Δ | ∂ | ∇ |
+| h | KC_F24 | FK24 | η | Η | ⋯ | ⋮ |
+| t | KC_RO (INT1) | AB11 | τ | Τ | ⇒ | ⇔ |
+| n | KC_KANA (INT2) | HKTG | ν | Ν | ℕ | ℚ |
+| s | KC_JYEN (INT3) | AE13 | σ | Σ | ∑ | ∏ |
+| b | KC_HENK (INT4) | HENK | β | Β | ∪ | ∩ |
+| m | KC_MHEN (INT5) | MUHE | μ | Μ | 𝔼 | ℙ |
+| , | KC_LANG1 | HNGL | “ | « | ⟨ | ⟦ |
+| . | KC_LANG2 | HJCV | ” | » | ⟩ | ⟧ |
+| ; | KC_NONUS_BSLASH | LSGT | ¿ | ¡ | ≠ | ≡ |
+| - | KC_KP_EQUAL | KPEQ | – | — | ÷ | ∓ |
+
+F13 is excluded on purpose: the desktops bind it to `pbt practice`. The
+option is merged after `inet(evdev)` (which would otherwise override
+F14–F24 with XF86 keysyms); it is user-level xkb (`~/.config/xkb`), honoured
+by KWin, Sway and Hyprland but not by X11/SDDM.
+
+Compose macros (M0–M15): — … · → ≤ ≥ ± ∞ • ° × ≈ √ ∈ ∅ κ. All but · were
+already in the fleet `~/.XCompose`; · is added by the same fleet commit.
 
 ### Mouse (Adjust + TG(Ms))
 
@@ -165,28 +198,48 @@ LSft  ___  ___  ___  ___  ___     ___  M←   M↑   M↓   M→   ___
 - **One glyph**: hold Raise, tap L1 (Magic1) or L3 (Magic2), release both, press the glyph key. Back on Base automatically.
 - **Many glyphs / mouse**: Adjust + TG key toggles the layer on; `Exit` top-left returns.
 
-## Macro budget
+## Board budget (probed 2026-10-07)
 
-Compose macros needed: Magic1 36 + em dash on Lower = 37, Magic2 36, total 73.
-Vial firmware commonly ships 16 or 32 macro slots. Fill order follows the
-frequency study, Magic1 first:
+| Item | Value |
+|---|---|
+| VIA / Vial protocol | 9 / 6 |
+| Dynamic layers | 8 (7 used) |
+| Macros | 16 slots, 6377-byte buffer (16 used) |
+| Tap dance / combo / key override slots | 32 / 32 / 32 (10 overrides used) |
+| Matrix | 4×12; rows 0–2 alphas, row 3 cols 3–8 thumbs; cols 0,1,9,10,11 of row 3 are optional keys not on this board |
 
-1. (16) — × α σ Δ μ β · ρ → ± τ ≤ ≈ ¿ ¡
-2. (32) + – ε ≥ θ ∈ √ λ ↔ χ π ∞ ν η φ … “
-3. (37) + ” κ ° ∑ ∫ … then Magic2 in row order.
-
-Keys whose macro did not fit are left `KC_NO` on the Magic layers.
+**Dongle jam.** The dongle relays Vial requests over the radio. If any request
+times out (halves asleep, two clients at once, write to a stale node) the
+raw-HID interface NAKs every transfer, even control requests, until the
+dongle is unplugged and replugged; the Vial GUI then dies with "failed to
+communicate with the device". One client at a time; replug before opening
+Vial if a probe ran.
 
 ## Files
 
 - `README.md` — this spec (source of truth for intent).
-- `layout.py` — layer spec as data + generator for the `.vil` file.
-- `w-corne-wanderers.vil` — generated Vial layout; load via Vial → File → Load saved layout.
-- `probe/vialq.py` — raw-HID probe: layer/macro/override counts, embedded keyboard definition.
-- `probe/wcorne-vial-def.json` — the board's embedded Vial definition (matrix, layout).
+- `layout.py` — layer tables + generator. Run `python3 layout.py` here; it rewrites everything below.
+- `w-corne-wanderers.vil` — generated Vial layout. Vial → File → Load saved layout.
+- `xkb/symbols/wanderers`, `xkb/rules/evdev` — generated host xkb option; copied to `/etc/nixos/home/xkb/`.
+- `compose-missing.txt` — Compose sequences the fleet `~/.XCompose` still lacks (should be empty).
+- `probe/vialq2.py` — retrying raw-HID probe (budgets + embedded definition). `probe/vialq.py` is the naive first version.
+- `probe/wcorne-vial-def.json` — the board's embedded Vial definition.
+
+## Loading and testing
+
+1. Replug the dongle (clears any jam). Open Vial (`vial`, or `nix run nixpkgs#vial`).
+2. File → Load saved layout → `w-corne-wanderers.vil`. Vial writes keys, macros and key overrides.
+3. QMK Settings tab: Tapping Term ~200 ms, Permissive Hold on (thumb mod-taps).
+4. Host side: the xkb option must be active in the session (`wanderers:magic`), see below.
 
 ## Host prerequisites
 
-Saturn: `pkgs.vial` + a udev rule matching `ATTRS{serial}=="*vial:f64c2b3c*"`
-(`/etc/nixos/devices/saturn/default.nix`). Without it hidraw is root-only and
-Vial sees no keyboard.
+Fleet commit on `/etc/nixos` (`home/xkb/`, `home/files.nix`, the three session
+configs, `home/xcompose/XCompose`): ships `~/.config/xkb/{symbols/wanderers,rules/evdev}`
+through home-manager and adds `wanderers:magic` to the Plasma, Sway and Hyprland
+xkb options. Saturn also needs `pkgs.vial` + the udev rule
+`ATTRS{serial}=="*vial:f64c2b3c*"` (commit `7aee69ad`).
+
+Until that deploys, the same files are copied by hand into `~/.config/xkb/`
+and `~/.config/kxkbrc` carries the option. **Remove the hand copies before the
+home-manager deploy** or it refuses to clobber them.
