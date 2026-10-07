@@ -32,12 +32,21 @@ VIAL_PROTOCOL, VIA_PROTOCOL = 6, 9
 
 # Physical key order used by every layer table below:
 #   row0 L(6) R(6), row1 L(6) R(6), row2 L(6) R(6), thumbs L(3) R(3)  = 42
-MATRIX_ORDER = (
-    [(r, c) for r in range(3) for c in range(12)]
-    + [(3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8)]
-)
-EXTRA_KEYS = [(3, 0), (3, 1), (3, 9), (3, 10), (3, 11)]   # in the definition, not on this board
-ABSENT = [(3, 2)]                                         # not in the definition at all
+#
+# Matrix wiring, from probe/wcorne-vial-def.json (verified against the Vial
+# keymap view 2026-10-07):
+#   left half   rows 0-2, matrix cols 0-5          (col 0 = pinky, col 5 = inner)
+#   right half  rows 0-2, matrix cols 7-11         (col 7 = inner, col 11 = ring)
+#               + the OUTER pinky column on (3,9) (3,10) (3,11) for rows 0/1/2
+#   thumbs      (3,3) (3,4) (3,5) | (3,6) (3,7) (3,8)
+#   optional inner keys (not on this 42-key board): (3,0) (3,1) left, (0,6) (1,6) right
+#   (2,6) and (3,2) do not exist in the definition at all.
+def _row(r):
+    return [(r, c) for c in range(6)] + [(r, c) for c in range(7, 12)] + [(3, 9 + r)]
+
+MATRIX_ORDER = _row(0) + _row(1) + _row(2) + [(3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8)]
+EXTRA_KEYS = [(3, 0), (3, 1), (0, 6), (1, 6)]   # in the definition, not populated here
+ABSENT = [(2, 6), (3, 2)]                        # not in the definition at all
 
 L_BASE, L_LOWER, L_RAISE, L_ADJUST, L_MAGIC1, L_MAGIC2, L_MOUSE = range(7)
 
