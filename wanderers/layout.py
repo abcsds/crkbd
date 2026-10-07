@@ -48,10 +48,6 @@ MATRIX_ORDER = _row(0) + _row(1) + _row(2) + [(3, 3), (3, 4), (3, 5), (3, 6), (3
 EXTRA_KEYS = [(3, 0), (3, 1), (0, 6), (1, 6)]   # inner keys: left (3,0) top (3,1) bottom; right (0,6) top (1,6) bottom
 ABSENT = [(2, 6), (3, 2)]                        # not in the definition at all
 
-# Inner keys on Base (beto, Vial 2026-10-07): F12 / LCtrl inside the left half,
-# PrtSc / RCtrl inside the right half. Transparent on every other layer.
-EXTRA_BASE = {(3, 0): "KC_F12", (3, 1): "KC_LCTRL", (0, 6): "KC_PSCREEN", (1, 6): "KC_RCTRL"}
-
 # QMK settings (Vial QSIDs): 7 = Tapping Term (ms); 8 = Tap-Hold flags, bit 0 set
 # as saved from the GUI with Permissive Hold enabled.
 SETTINGS = {"7": 200, "8": 1}
@@ -93,6 +89,34 @@ XKB_KEYS = {
     "-": ("KC_KP_EQUAL",     "KPEQ",   "–", "—", "÷", "∓"),
 }
 GREEK_POSITIONS = set("pyfgcrladehtnsbm")                 # alphabetic type (Caps Lock aware)
+
+# Second host-mapped set, for the four INNER keys (Lin1/Lin2 left, Rin1/Rin2
+# right). Vial's catalogue lacks LANG3/LANG4/INT6, so those go in as raw hex
+# (HID usage = QMK basic keycode); Vial round-trips "0xNNNN" strings.
+# name -> (vial keycode, xkb keycode, L1, L2(Shift), L3(AltGr), L4(AltGr+Shift))
+HOST_KEYS = {
+    "accent-o": ("0x0092",     "KATA", "ó", "Ó", "á", "Á"),   # KC_LANG3 -> KEY_KATAKANA
+    "accent-i": ("0x0093",     "HIRA", "í", "Í", "ú", "Ú"),   # KC_LANG4 -> KEY_HIRAGANA
+    "enye":     ("0x008C",     "JPCM", "ñ", "Ñ", "ü", "Ü"),   # KC_INT6  -> KEY_KPJPCOMMA
+    "omega":    ("KC_EXECUTE", "OPEN", "ω", "Ω", "⊕", "⊗"),
+    "psi":      ("KC_HELP",    "HELP", "ψ", "Ψ", "∘", "∣"),
+    "xi":       ("KC_SELECT",  "FRNT", "ξ", "Ξ", "′", "″"),
+    "zeta":     ("KC_STOP",    "STOP", "ζ", "Ζ", "≔", "↦"),
+}
+
+# Inner keys per layer: (Lin1, Lin2, Rin1, Rin2) = ((3,0), (3,1), (0,6), (1,6)).
+# Base row is beto's (Vial, 2026-10-07); the rest approved 2026-10-07.
+INNER_ORDER = [(3, 0), (3, 1), (0, 6), (1, 6)]
+def HK(name): return HOST_KEYS[name][0]
+INNER = {
+    0: ["KC_F12", "KC_LCTRL", "KC_PSCREEN", "KC_RCTRL"],
+    1: [HK("enye"), "KC_ENTER", HK("accent-o"), HK("accent-i")],      # Lower: ñ, plain Enter, ó, í
+    2: ["0x032B", "LCTL(KC_TAB)", "KC_DELETE", "LCTL(KC_DELETE)"],    # Raise: C-S-Tab, C-Tab, Del, C-Del
+    3: ["DYN_REC_START1", "DYN_MACRO_PLAY1", "KC_KP_PLUS", "KC_KP_ENTER"],
+    4: [HK("omega"), HK("psi"), HK("xi"), HK("zeta")],                 # Magic1: ω ψ ξ ζ (Shift: upper)
+    5: ["RALT(%s)" % HK(n) for n in ("omega", "psi", "xi", "zeta")],   # Magic2: ⊕⊗ ∘∣ ′″ ≔↦
+    6: ["KC_BTN4", "KC_BTN5", "KC_BTN1", "KC_BTN2"],
+}
 
 # Compose macros (Menu + decimal codepoint + Space). Index = Vial macro number.
 MACROS = ["—", "…", "·", "→", "≤", "≥", "±", "∞", "•", "°", "×", "≈", "√", "∈", "∅", "κ"]
@@ -146,7 +170,7 @@ ADJUST = [
         "KC_INSERT", "KC_APPLICATION", "KC_KP_4", "KC_KP_5", "KC_KP_6", "KC_KP_ASTERISK",
     # ___     Vol-     Vol+      TG(Ms)    TG(Mag1)  TG(Mag2)      ___  ___  1  2  3  -
     T, "KC_VOLD", "KC_VOLU", "TG(%d)" % L_MOUSE, "TG(%d)" % L_MAGIC1, "TG(%d)" % L_MAGIC2,
-        X, X, "KC_KP_1", "KC_KP_2", "KC_KP_3", "KC_KP_MINUS",
+        "DYN_REC_STOP", X, "KC_KP_1", "KC_KP_2", "KC_KP_3", "KC_KP_MINUS",
     T, T, T,                                               "KC_KP_0", T, "KC_KP_DOT",
 ]
 
@@ -242,8 +266,8 @@ def build_vil():
         grid = [[-1] * COLS for _ in range(ROWS)]
         for (r, c), kc in zip(MATRIX_ORDER, layer):
             grid[r][c] = canon(kc)
-        for rc in EXTRA_KEYS:
-            grid[rc[0]][rc[1]] = EXTRA_BASE[rc] if li == L_BASE else T
+        for rc, kc in zip(INNER_ORDER, INNER.get(li, [T] * 4)):
+            grid[rc[0]][rc[1]] = canon(kc)
         layout.append(grid)
     overrides = [dict(ko, trigger=canon(ko["trigger"]), replacement=canon(ko["replacement"]))
                  for ko in KEY_OVERRIDES]
@@ -306,8 +330,8 @@ def build_xkb_symbols():
         "partial alphanumeric_keys",
         'xkb_symbols "magic" {',
     ]
-    for pos, (vial, xkbname, l1, l2, l3, l4) in XKB_KEYS.items():
-        typ = "FOUR_LEVEL_ALPHABETIC" if pos in GREEK_POSITIONS else "FOUR_LEVEL"
+    for pos, (vial, xkbname, l1, l2, l3, l4) in list(XKB_KEYS.items()) + list(HOST_KEYS.items()):
+        typ = "FOUR_LEVEL_ALPHABETIC" if (pos in GREEK_POSITIONS or pos in HOST_KEYS) else "FOUR_LEVEL"
         syms = ", ".join("%-6s" % keysym(ch) for ch in (l1, l2, l3, l4))
         lines.append('    key <%s> { type[Group1] = "%s", [ %s ] }; // %s: %s %s %s %s'
                      % (xkbname, typ, syms, pos, l1, l2, l3, l4))
@@ -346,7 +370,7 @@ def main():
     missing = compose_missing()
     (HERE / "compose-missing.txt").write_text("\n".join(missing) + ("\n" if missing else ""))
     print("vil layers:", len(vil["layout"]), "macros:", len(vil["macro"]), "key overrides:", len(vil["key_override"]))
-    print("xkb keys:", len(XKB_KEYS), "compose sequences missing from fleet:", len(missing))
+    print("xkb keys:", len(XKB_KEYS) + len(HOST_KEYS), "compose sequences missing from fleet:", len(missing))
     for m in missing:
         print("  ", m)
 

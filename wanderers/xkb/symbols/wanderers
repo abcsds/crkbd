@@ -24,4 +24,11 @@ xkb_symbols "magic" {
     key <HJCV> { type[Group1] = "FOUR_LEVEL", [ U201D , U00BB , U27E9 , U27E7  ] }; // .: ” » ⟩ ⟧
     key <LSGT> { type[Group1] = "FOUR_LEVEL", [ U00BF , U00A1 , U2260 , U2261  ] }; // ;: ¿ ¡ ≠ ≡
     key <KPEQ> { type[Group1] = "FOUR_LEVEL", [ U2013 , U2014 , U00F7 , U2213  ] }; // -: – — ÷ ∓
+    key <KATA> { type[Group1] = "FOUR_LEVEL_ALPHABETIC", [ U00F3 , U00D3 , U00E1 , U00C1  ] }; // accent-o: ó Ó á Á
+    key <HIRA> { type[Group1] = "FOUR_LEVEL_ALPHABETIC", [ U00ED , U00CD , U00FA , U00DA  ] }; // accent-i: í Í ú Ú
+    key <JPCM> { type[Group1] = "FOUR_LEVEL_ALPHABETIC", [ U00F1 , U00D1 , U00FC , U00DC  ] }; // enye: ñ Ñ ü Ü
+    key <OPEN> { type[Group1] = "FOUR_LEVEL_ALPHABETIC", [ U03C9 , U03A9 , U2295 , U2297  ] }; // omega: ω Ω ⊕ ⊗
+    key <HELP> { type[Group1] = "FOUR_LEVEL_ALPHABETIC", [ U03C8 , U03A8 , U2218 , U2223  ] }; // psi: ψ Ψ ∘ ∣
+    key <FRNT> { type[Group1] = "FOUR_LEVEL_ALPHABETIC", [ U03BE , U039E , U2032 , U2033  ] }; // xi: ξ Ξ ′ ″
+    key <STOP> { type[Group1] = "FOUR_LEVEL_ALPHABETIC", [ U03B6 , U0396 , U2254 , U21A6  ] }; // zeta: ζ Ζ ≔ ↦
 };

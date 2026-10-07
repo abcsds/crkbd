@@ -8,7 +8,7 @@ as closely as a 42-key board allows. Approved 2026-10-07.
 
 | Field | Value |
 |---|---|
-| Board | KeyClicks / PandaKB **W-Corne V4.1 MX**, 42 keys (3×6 + 3 thumbs per side) |
+| Board | KeyClicks / PandaKB **W-Corne V4.1 MX**, 46 keys (3×6 + 2 inner + 3 thumbs per side) |
 | Connection | 2.4 GHz dongle only. USB-C on the halves is charge-only. |
 | USB dongle | `55d4:0461` "Pilot W-CORNE", serial `vial:f64c2b3c` (Vial magic) |
 | Firmware | Closed nRF build with Vial. Halves update via nRF Connect DFU-over-BLE ("KCDFU", hold 4 keys at power-on); dongle via the Vial bootloader. |
@@ -38,7 +38,26 @@ on a Wanderers host.
 | 6 | Mouse | `TG(6)` on Adjust | mouse keys |
 
 Thumb legend, left to right: `L1 L2 L3 | R1 R2 R3`. L3 and R1 are the 1.5u
-inner keys.
+inner keys. The two inner column keys per half are `Lin1`/`Lin2` (left, top
+and bottom) and `Rin1`/`Rin2` (right); they are not drawn in the diagrams and
+are listed in their own table below.
+
+### Inner keys (Lin1 Lin2 | Rin1 Rin2)
+
+| Layer | Lin1 | Lin2 | Rin1 | Rin2 |
+|---|---|---|---|---|
+| Base | F12 | LCtrl | PrtSc | RCtrl |
+| Lower | ñ Ñ (AltGr ü Ü) | Enter, plain | ó Ó (AltGr á Á) | í Í (AltGr ú Ú) |
+| Raise | Ctrl+Shift+Tab | Ctrl+Tab | Delete | Ctrl+Delete |
+| Adjust | DM1 Rec | DM1 Play | KP + | KP Enter |
+| Magic1 | ω Ω | ψ Ψ | ξ Ξ | ζ Ζ |
+| Magic2 | ⊕ ⊗ | ∘ ∣ | ′ ″ | ≔ ↦ |
+| Mouse | Btn4 (back) | Btn5 (forward) | Btn1 | Btn2 |
+
+The Lower accents follow the dead-key study (ó is half of all accented
+characters, then í á é ú ñ; é stays AltGr+e). The plain Enter exists because
+the thumb Enter is a mod-tap and cannot auto-repeat. Adjust also gets
+`DM Rec Stop` on the key right of `TG(Mag2)`.
 
 ### Base
 
@@ -164,6 +183,17 @@ Host mapping (`xkb/symbols/wanderers`, generated):
 | . | KC_LANG2 | HJCV | ” | » | ⟩ | ⟧ |
 | ; | KC_NONUS_BSLASH | LSGT | ¿ | ¡ | ≠ | ≡ |
 | - | KC_KP_EQUAL | KPEQ | – | — | ÷ | ∓ |
+| Lower Rin1 | KC_LANG3 (`0x0092`) | KATA | ó | Ó | á | Á |
+| Lower Rin2 | KC_LANG4 (`0x0093`) | HIRA | í | Í | ú | Ú |
+| Lower Lin1 | KC_INT6 (`0x008C`) | JPCM | ñ | Ñ | ü | Ü |
+| Magic Lin1 | KC_EXECUTE | OPEN | ω | Ω | ⊕ | ⊗ |
+| Magic Lin2 | KC_HELP | HELP | ψ | Ψ | ∘ | ∣ |
+| Magic Rin1 | KC_SELECT | FRNT | ξ | Ξ | ′ | ″ |
+| Magic Rin2 | KC_STOP | STOP | ζ | Ζ | ≔ | ↦ |
+
+LANG3, LANG4 and INT6 are not in Vial's keycode list, so the `.vil` carries
+them as raw hex; Vial shows them as "Any" keys. `KC_FIND` is the one spare
+scancode left.
 
 F13 is excluded on purpose: the desktops bind it to `pbt practice`. The
 option is merged after `inet(evdev)` (which would otherwise override
@@ -206,7 +236,7 @@ LSft  ___  ___  ___  ___  ___     ___  M←   M↑   M↓   M→   ___
 | Dynamic layers | 8 (7 used) |
 | Macros | 16 slots, 6377-byte buffer (16 used) |
 | Tap dance / combo / key override slots | 32 / 32 / 32 (10 overrides used) |
-| Matrix | 4×12. Left half rows 0–2 cols 0–5; right half rows 0–2 cols 7–11 plus the outer pinky column on (3,9) (3,10) (3,11); thumbs (3,3)–(3,8). (3,0) (3,1) (0,6) (1,6) are optional inner keys this board lacks; (2,6) and (3,2) do not exist. |
+| Matrix | 4×12. Left half rows 0–2 cols 0–5; right half rows 0–2 cols 7–11 plus the outer pinky column on (3,9) (3,10) (3,11); thumbs (3,3)–(3,8); inner keys (3,0) (3,1) left and (0,6) (1,6) right. (2,6) and (3,2) do not exist. |
 
 **Dongle jam.** The dongle relays Vial requests over the radio. If any request
 times out (halves asleep, two clients at once, write to a stale node) the
